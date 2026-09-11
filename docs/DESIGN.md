@@ -105,6 +105,7 @@
 
 **サーバ側検証**
 - 必須：`lat`, `lng` が数値。それ以外は空でも受理。
+- `observed_year`/`observed_month`/`observed_day` はフロントから number で送るが、`"2026"` のような数字だけの文字列も GAS 側で数値として受理する（`gas/Code.gs` の `toIntOrRaw_`）。
 - 選択肢外の値 → その項目を空にして `review_status = invalid` は付けず、**丸ごと `invalid`** にする（改竄の痕跡として残す）。
 - 北海道の矩形（`config/map.json` の `areaBounds`）外 → 保存して `out_of_area`。
 - ハニーポットが埋まっている → 保存せず `{ok:true}` を返す（ボットに気づかせない）。
