@@ -99,13 +99,15 @@ npm run size
 2. `main` ブランチに push すると `.github/workflows/deploy.yml` が自動でビルドし、GitHub Pages に公開する。
 3. 公開URL（`https://<ユーザー名>.github.io/<リポジトリ名>/` の形式）を手順3の `gasUrl` 同様に控えておく（QR生成・`labPageUrl` 等で使う）。
 
+本番は **https://github.com/NN3210/frog-map** に置いてあり、公開URLは **https://nn3210.github.io/frog-map/** （`docs/qr/` のQRはこのURL + `?src=festival_2026` を指す）。
+
 ### 7. QRコードを生成する
 
 本番URLが決まったら、配布用QRコードを作ります。
 
 ```bash
 python -m pip install -r scripts/requirements.txt
-python scripts/make_qr.py --url "https://<ユーザー名>.github.io/<リポジトリ名>/" --src festival_2026 --out-dir docs/qr --title "カエル見つけたマップ"
+python scripts/make_qr.py --url "https://nn3210.github.io/frog-map/" --src festival_2026 --out-dir docs/qr --title "カエル見つけたマップ"
 ```
 
 `docs/qr/` に PNG・SVG・印刷用PDFが出力されます。ブース別・日別に分けたい場合は `--src booth_a,booth_b` のようにカンマ区切りで複数指定できます。
