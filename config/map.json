@@ -1,0 +1,16 @@
+{
+  "center": [43.1961, 141.7759],
+  "zoom": 10,
+  "minZoom": 7,
+  "maxZoom": 17,
+  "areaBounds": [[41.3, 139.3], [45.6, 146.0]],
+  "roundDecimals": 4,
+  "publicDecimals": 3,
+  "showPublicPins": true,
+  "enableComment": false,
+  "requireConsent": false,
+  "gasUrl": "",
+  "privacyPolicyUrl": "",
+  "labPageUrl": "",
+  "defaultSource": "festival_2026"
+}

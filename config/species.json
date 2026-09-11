@@ -1,0 +1,9 @@
+[
+  {"code":"amagaeru","name":"ヒガシニホンアマガエル","note":"小さくて緑や灰色。吸盤がある","color":"#2e9e4f"},
+  {"code":"tonosama","name":"トノサマガエル／トウキョウダルマガエル","note":"見分けが難しいため1つにまとめる","color":"#7a5c2e"},
+  {"code":"ezoaka","name":"エゾアカガエル","note":"北海道の在来種。早春に鳴く","color":"#d9532b"},
+  {"code":"hikigaeru","name":"ヒキガエル","note":"大きく、いぼがある","color":"#5b4a3a"},
+  {"code":"tsuchigaeru","name":"ツチガエル","note":"背中にいぼがある。水辺に多い","color":"#8a8f2e"},
+  {"code":"ushigaeru","name":"ウシガエル","note":"とても大きい。「ヴォー」と低く鳴く","color":"#1f6f8b"},
+  {"code":"unknown","name":"わからない","note":"","color":"#888888"}
+]

@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="referrer" content="no-referrer">
+<title>カエル見つけたマップ</title>
+<link rel="stylesheet" href="./app.css">
+</head>
+<body>
+
+<div id="map" role="application" aria-label="カエルを見つけた場所の地図"></div>
+
+<header id="top-banner" class="top-banner">
+  地図をタップして、カエルを見た・聞いた場所を教えてください
+</header>
+
+<button id="usage-btn" class="fab fab-left" type="button" aria-haspopup="dialog">使い方</button>
+
+<!-- 投稿シート -->
+<div id="sheet-backdrop" class="sheet-backdrop" hidden></div>
+<section id="sheet" class="sheet" aria-hidden="true" aria-labelledby="sheet-title">
+  <div class="sheet-handle"></div>
+  <button id="sheet-close" class="sheet-close" type="button" aria-label="閉じる">×</button>
+  <div class="sheet-inner">
+    <h2 id="sheet-title">この場所でカエルを見た・聞いた</h2>
+    <p id="sheet-coords" class="sheet-coords"></p>
+
+    <div id="error-banner" class="error-banner" hidden role="alert"></div>
+
+    <form id="frog-form" novalidate>
+      <div class="field">
+        <label id="species-label">種（しゅ）</label>
+        <div id="species-cards" class="species-scroll" role="radiogroup" aria-labelledby="species-label"></div>
+      </div>
+
+      <div class="field">
+        <label id="date-label">観察時期</label>
+        <div class="date-row" role="group" aria-labelledby="date-label">
+          <select id="obs-year" aria-label="年"></select>
+          <select id="obs-month" aria-label="月"></select>
+          <select id="obs-day" aria-label="日"></select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="count-category">個体数</label>
+        <select id="count-category" name="count_category">
+          <option value="">未選択</option>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+          <option value="7">7</option>
+          <option value="8">8</option>
+          <option value="9">9</option>
+          <option value="10">10</option>
+          <option value="many">たくさん（11以上）</option>
+          <option value="few">少ない（数えていない）</option>
+          <option value="unknown">不明</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="method">確認方法</label>
+        <select id="method" name="method">
+          <option value="">未選択</option>
+          <option value="seen">姿を見た</option>
+          <option value="heard">鳴き声だけ</option>
+          <option value="both">両方</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="confidence">自信</label>
+        <select id="confidence" name="confidence">
+          <option value="">未選択</option>
+          <option value="high">自信あり</option>
+          <option value="medium">たぶん</option>
+          <option value="low">自信なし</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="habitat">環境</label>
+        <select id="habitat" name="habitat">
+          <option value="">未選択</option>
+          <option value="paddy">田んぼ</option>
+          <option value="ditch_river">用水路・川</option>
+          <option value="pond">池・沼</option>
+          <option value="forest_grass">林・草地</option>
+          <option value="road_residential">道路・住宅地</option>
+          <option value="other">その他</option>
+        </select>
+      </div>
+
+      <div id="comment-field" class="field" hidden>
+        <label for="comment">ひとこと</label>
+        <textarea id="comment" name="comment" maxlength="100" rows="2"></textarea>
+        <p class="hint">お名前・住所・電話番号など個人が分かることは書かないでください</p>
+      </div>
+
+      <div class="hp-field" aria-hidden="true">
+        <label for="website">website</label>
+        <input type="text" id="website" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+      </div>
+
+      <button id="submit-btn" class="submit-btn" type="submit">
+        <span id="submit-label">この内容で送る</span>
+      </button>
+    </form>
+  </div>
+</section>
+
+<!-- 使い方モーダル -->
+<div id="usage-modal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="usage-modal-title">
+  <div class="modal-box">
+    <button class="modal-close" type="button" data-close-modal="usage-modal" aria-label="閉じる">×</button>
+    <h2 id="usage-modal-title">使い方</h2>
+    <ul class="usage-steps">
+      <li><span class="emoji">🗺️</span><span>地図をタップして、カエルを見た・聞いた場所を教えてください</span></li>
+      <li><span class="emoji">🐸</span><span>カエルの種類や、いつ・どうやって確認したかをえらびます</span></li>
+      <li><span class="emoji">📮</span><span>「この内容で送る」ボタンでおくれば完了です</span></li>
+    </ul>
+    <div class="privacy-note">
+      <p>このアプリは、あなたの端末の情報（位置情報・写真・連絡先など）を取得・保存しません。</p>
+      <p>投稿されるのは、地図でタップした場所と、フォームで選んだ内容だけです。</p>
+      <p>投稿された場所は、研究のために保存され、精度を粗くした上で地図に表示されることがあります。</p>
+      <p id="privacy-link-wrap" hidden><a id="privacy-link" href="#" target="_blank" rel="noopener">大学のプライバシー方針を見る</a></p>
+    </div>
+    <button id="usage-ok-btn" class="modal-ok-btn" type="button">わかりました</button>
+  </div>
+</div>
+
+<!-- 種の詳細モーダル -->
+<div id="species-modal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="species-modal-title">
+  <div class="modal-box">
+    <button class="modal-close" type="button" data-close-modal="species-modal" aria-label="閉じる">×</button>
+    <div id="species-modal-img-wrap"></div>
+    <h2 id="species-modal-title"></h2>
+    <p id="species-modal-note"></p>
+    <div id="species-modal-audio-wrap"></div>
+  </div>
+</div>
+
+<!-- 完了画面 -->
+<div id="complete-screen" class="complete-screen" hidden>
+  <h2>ありがとうございました！</h2>
+  <p>投稿が届きました。</p>
+  <div class="complete-actions">
+    <button id="again-btn" class="btn-primary" type="button">もう1件投稿する</button>
+    <a id="lab-link" class="btn-secondary" href="#" target="_blank" rel="noopener" hidden>研究室のページを見る</a>
+  </div>
+</div>
+
+<script src="./app.js"></script>
+</body>
+</html>
