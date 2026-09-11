@@ -5,7 +5,14 @@ import './style.css';
 import mapConfig from '../config/map.json';
 import speciesList from '../config/species.json';
 
-import { createMap, placeOrMoveTempPin, getTempPinLatLng, clearTempPin, renderPublicPins } from './map.js';
+import {
+  createMap,
+  placeOrMoveTempPin,
+  getTempPinLatLng,
+  clearTempPin,
+  renderPublicPins,
+  toggleBaseLayer
+} from './map.js';
 import { initForm, resetForm, setSheetCoords } from './form.js';
 import {
   $,
@@ -33,12 +40,25 @@ function onMapClick(latlng) {
   openSheet();
 }
 
+// 背景（標準地図⇔航空写真）切替ボタン
+function wireLayerButton() {
+  const btn = $('layer-btn');
+  btn.addEventListener('click', () => {
+    const kind = toggleBaseLayer();
+    const isPhoto = kind === 'photo';
+    btn.setAttribute('aria-pressed', String(isPhoto));
+    btn.setAttribute('aria-label', isPhoto ? '背景を標準地図に切り替える' : '背景を航空写真に切り替える');
+    btn.textContent = isPhoto ? '地図' : '航空写真';
+  });
+}
+
 function main() {
   createMap($('map'), mapConfig, onMapClick);
 
   wireModalCloseButtons();
   initUsageModal(mapConfig);
   wireSheetClose();
+  wireLayerButton();
 
   if (mapConfig.showPublicPins) {
     fetchPublicPins(mapConfig.gasUrl)

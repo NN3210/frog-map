@@ -82,6 +82,21 @@ body {
   bottom: max(12px, env(safe-area-inset-bottom));
 }
 
+/* 右下は Leaflet の出典表記と重なるので、その分だけ持ち上げる */
+.fab-right {
+  right: 12px;
+  bottom: calc(max(12px, env(safe-area-inset-bottom)) + 26px);
+  background: #fff;
+  color: var(--accent);
+  border: 2px solid var(--accent);
+}
+
+.fab-right:active,
+.fab-right[aria-pressed="true"] {
+  background: var(--accent);
+  color: #fff;
+}
+
 /* ---------- Bottom sheet ---------- */
 .sheet-backdrop {
   position: fixed;

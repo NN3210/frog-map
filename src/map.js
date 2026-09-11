@@ -15,8 +15,24 @@ const tempPinIcon = L.divIcon({
   iconAnchor: [17, 46]
 });
 
+// 背景タイル（どちらも地理院タイル。外部接続先は増やさない）
+const GSI_ATTRIBUTION =
+  '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>';
+const BASE_LAYERS = {
+  std: {
+    url: 'https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png',
+    maxNativeZoom: 18
+  },
+  photo: {
+    url: 'https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg',
+    maxNativeZoom: 18
+  }
+};
+
 let mapInstance = null;
 let tempMarker = null;
+let baseLayers = null; // { std: L.TileLayer, photo: L.TileLayer }
+let currentBase = 'std';
 
 /**
  * 地図を初期化する。
@@ -33,17 +49,43 @@ export function createMap(container, mapConfig, onMapClick) {
     zoomControl: true
   });
 
-  L.tileLayer('https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png', {
-    maxZoom: mapConfig.maxZoom,
-    attribution:
-      '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>'
-  }).addTo(mapInstance);
+  baseLayers = {};
+  for (const key of Object.keys(BASE_LAYERS)) {
+    baseLayers[key] = L.tileLayer(BASE_LAYERS[key].url, {
+      maxZoom: mapConfig.maxZoom,
+      maxNativeZoom: BASE_LAYERS[key].maxNativeZoom,
+      attribution: GSI_ATTRIBUTION
+    });
+  }
+  currentBase = 'std';
+  baseLayers[currentBase].addTo(mapInstance);
 
   mapInstance.on('click', (e) => {
     onMapClick({ lat: e.latlng.lat, lng: e.latlng.lng });
   });
 
   return mapInstance;
+}
+
+/**
+ * 背景を切り替える。
+ * @param {'std'|'photo'} kind 'std'=標準地図 / 'photo'=航空写真（全国最新写真）
+ */
+export function setBaseLayer(kind) {
+  if (!mapInstance || !baseLayers || !baseLayers[kind] || kind === currentBase) return;
+  mapInstance.removeLayer(baseLayers[currentBase]);
+  currentBase = kind;
+  baseLayers[currentBase].addTo(mapInstance);
+}
+
+/** 標準地図⇔航空写真をトグルし、切替後の種別を返す。 */
+export function toggleBaseLayer() {
+  setBaseLayer(currentBase === 'std' ? 'photo' : 'std');
+  return currentBase;
+}
+
+export function getBaseLayer() {
+  return currentBase;
 }
 
 /**

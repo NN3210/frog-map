@@ -19,8 +19,10 @@
 
 ### 地理院タイル（国土地理院）
 
-- 用途：背景地図（標準地図）
-- タイルURL：`https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png`
+- 用途：背景地図（標準地図・航空写真の2種類。画面右下のボタンで切替）
+- タイルURL：
+  - 標準地図：`https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png`
+  - 全国最新写真（シームレス）：`https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg`
 - 利用規約：https://maps.gsi.go.jp/development/ichiran.html
 - 出典表記：「地理院タイル」を画面上に常時表示する（Leaflet の attribution 欄）。
 - 備考：申請不要・無償で利用可能だが、出典の記載が必須。地図タイルそのものの著作権は国土地理院に帰属する。

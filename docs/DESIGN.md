@@ -10,11 +10,12 @@
 | 層 | 採用 | 理由 |
 |---|---|---|
 | フロント | **Vanilla JS + Leaflet 1.9**、esbuild で単一バンドル | フレームワーク不要の規模。Leaflet は JS 約42KB + CSS 約4KB（gzip）で 300KB 目標に余裕。esbuild は依存ゼロ・高速。 |
-| 地図タイル | 地理院タイル 標準地図 `https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png` | 水田記号あり。出典表記「地理院タイル」を常時表示（[利用規約](https://maps.gsi.go.jp/development/ichiran.html) の「出典の記載」要件に対応）。 |
+| 地図タイル | 地理院タイル 標準地図 `https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png`（既定）＋ 全国最新写真（シームレス）`https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg`（右下の「航空写真」ボタンで切替） | 標準地図は水田記号あり。航空写真は田んぼ・池の実際の様子を見ながら場所を選べる。どちらも地理院タイルなので外部接続先は増えない。出典表記「地理院タイル」を常時表示（[利用規約](https://maps.gsi.go.jp/development/ichiran.html) の「出典の記載」要件に対応）。切替状態は保存しない（localStorage 不使用のため、再読込で標準地図に戻る）。 |
 | ピン | Leaflet `circleMarker`（既投稿）＋ `divIcon`（仮ピン） | 画像アイコンを使わないので追加リクエストなし。種ごとに色分けは CSS のみ。 |
 | バックエンド | Google Apps Script Web アプリ（`doPost` 受付 / `doGet` 公開ピン配信）＋スプレッドシート | 要件 6.1 のとおり。追加費用なし、CSV は標準機能。 |
 | ホスティング | GitHub Pages（`dist/` を `gh-pages` ブランチへ） | 無料・静的。大学ドメインが使える場合は CNAME で対応可。 |
 | QR | Python `segno`（純Python）で PNG/SVG、`reportlab` で印刷用 PDF | `?src=` 別に複数枚生成。 |
+| QR配布ページ | `docs/qr/index.html`（QR画像とPNG/SVG/PDFのダウンロードリンクだけの静的HTML）。ビルド時に `docs/qr/` を丸ごと `dist/qr/` にコピーし、公開サイトの `/qr/` で開ける | JSなし・外部通信なし。`app.js+app.css` の300KB上限には影響しない。 |
 | エクスポート | Python `scripts/export.py`：シートから DL した CSV → GeoJSON / QGIS 用 CSV | Google API 認証不要（手動 DL した CSV を入力にする）。 |
 
 **外部接続先はふたつだけ**：地理院タイル（画像）と GAS の URL（投稿・公開ピン取得）。JS/CSS は自前配信。

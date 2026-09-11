@@ -40,7 +40,7 @@ QR掲示物や配布チラシなど、アプリ外の紙面に載せるための
 - **Cookie を使用しない**：`document.cookie` を読み書きするコードは無い。
 - **localStorage / sessionStorage を使用しない**：送信失敗時に入力内容を保持する仕組みは、ページを閉じると消える**メモリ上の変数**のみで実現しており、ブラウザストレージへの保存は行っていない。
 - **アナリティクス・外部トラッカーを使用しない**：Google Analytics 等の計測タグは埋め込んでいない。
-- **外部接続先は2つだけ**：地理院タイル（`https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png`、地図画像の取得のみ）と、GAS のウェブアプリURL（投稿の送信・公開ピンの取得）。地図ライブラリ（Leaflet）などのJS/CSSは外部CDNからではなく、`npm run build` で自前のバンドル（`dist/app.js` / `dist/app.css`）として配信する。
+- **外部接続先は2つだけ**：地理院タイル（`https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png` および航空写真 `https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg`、地図画像の取得のみ）と、GAS のウェブアプリURL（投稿の送信・公開ピンの取得）。地図ライブラリ（Leaflet）などのJS/CSSは外部CDNからではなく、`npm run build` で自前のバンドル（`dist/app.js` / `dist/app.css`）として配信する。
 - **座標は保存時に4桁、公開表示時に3桁に丸める**：緯度経度は `config/map.json` の `roundDecimals`（既定4桁＝約10m精度）で保存し、`?action=pins` で公開する際はさらに `publicDecimals`（既定3桁＝約100m精度）に丸め直す。丸め処理はクライアント側と GAS 側の両方で行っており（`gas/Code.gs` の `roundTo`）、生の高精度座標がサーバに残らない。
 - **IPアドレス・User-Agentを保存しない**：GAS の `doPost` / `doGet` は投稿本文（JSON）以外の値をスプレッドシートに書き込んでおらず、リクエスト元のIP・User-Agent・端末識別子を保存する処理自体が実装に存在しない。
 - **氏名・連絡先の入力欄を設けていない**：投稿フォームに氏名・住所・電話番号を入力する項目は無い（自由記述「ひとこと」欄は既定で非表示 `enableComment:false`。有効化する場合も「個人が分かることは書かないでください」という注意書きを表示する）。

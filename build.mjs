@@ -76,6 +76,13 @@ async function copyIndexHtml() {
   await fs.writeFile(dest, html.replace('__APP_VERSION__', APP_VERSION), 'utf8');
 }
 
+// docs/qr/（QR画像・PDF・ダウンロード用 index.html）をそのまま dist/qr/ に置く。
+async function copyQrPage() {
+  const qrSrcDir = path.join(root, 'docs', 'qr');
+  if (!fssync.existsSync(qrSrcDir)) return;
+  await fs.cp(qrSrcDir, path.join(distDir, 'qr'), { recursive: true });
+}
+
 async function writeNojekyll() {
   await fs.writeFile(path.join(distDir, '.nojekyll'), '', 'utf8');
 }
@@ -108,6 +115,7 @@ async function buildOnce() {
   await fs.mkdir(distDir, { recursive: true });
   const assetsManifest = await copyAssets();
   await copyIndexHtml();
+  await copyQrPage();
   await writeNojekyll();
   await esbuild.build(commonEsbuildOptions(assetsManifest));
 }
@@ -142,6 +150,7 @@ async function runDevServer() {
   await fs.mkdir(distDir, { recursive: true });
   const assetsManifest = await copyAssets();
   await copyIndexHtml();
+  await copyQrPage();
   await writeNojekyll();
 
   const ctx = await esbuild.context(commonEsbuildOptions(assetsManifest));

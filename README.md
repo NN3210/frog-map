@@ -112,6 +112,8 @@ python scripts/make_qr.py --url "https://nn3210.github.io/frog-map/" --src festi
 
 `docs/qr/` に PNG・SVG・印刷用PDFが出力されます。ブース別・日別に分けたい場合は `--src booth_a,booth_b` のようにカンマ区切りで複数指定できます。
 
+生成済みのQRは `docs/qr/index.html` を開くとプレビューとダウンロードリンクが見られます。`docs/qr/` はビルド時に `dist/qr/` へコピーされるので、公開サイトでは **https://nn3210.github.io/frog-map/qr/** から同じページを開けます。
+
 ### 8. データを取得する
 
 祭り当日〜終了後、投稿データを取得する手順です。詳しくは `gas/README.md` §8、当日の運用は `docs/RUNBOOK.md` を参照してください。
