@@ -27,25 +27,29 @@
 
 ---
 
-## 3Dモデル・写真（種の画像）
+## 種の写真
+
+現在は差し替え用の仮素材として、Wikimedia Commons の写真を使用しています。ライセンスは Commons API のメタデータで 2026-09-11 に確認しました。
+
+| 種コード | 種 | Commonsファイル | 作者 | ライセンス |
+|---|---|---|---|---|
+| amagaeru | *Dryophytes leopardus*（ヒガシニホンアマガエル） | [File:Japanese tree frog (Hyla japonica), green.jpg](https://commons.wikimedia.org/wiki/File:Japanese_tree_frog_(Hyla_japonica),_green.jpg) | Warehadokuro | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) |
+| tonosama | *Pelophylax nigromaculatus*（トノサマガエル） | [File:Pelophylax nigromaculatus s1.JPG](https://commons.wikimedia.org/wiki/File:Pelophylax_nigromaculatus_s1.JPG) | Alpsdake | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) |
+| ezoaka | *Rana pirica*（エゾアカガエル） | [File:Rana pirica 228856699.jpg](https://commons.wikimedia.org/wiki/File:Rana_pirica_228856699.jpg) | Atsushi Nakajima | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/) |
+| hikigaeru | *Bufo japonicus*（ヒキガエル） | [File:Bufo japonicus formosus s10.jpg](https://commons.wikimedia.org/wiki/File:Bufo_japonicus_formosus_s10.jpg) | Alpsdake | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/) |
+| tsuchigaeru | *Glandirana rugosa*（ツチガエル） | [File:Glandirana rugosa.JPG](https://commons.wikimedia.org/wiki/File:Glandirana_rugosa.JPG) | Alpsdake | [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) |
+| ushigaeru | *Lithobates catesbeianus*（ウシガエル） | [File:Lithobates catesbeianus bullfrog amphibian.jpg](https://commons.wikimedia.org/wiki/File:Lithobates_catesbeianus_bullfrog_amphibian.jpg) | Buchanan Bill, U.S. Fish and Wildlife Service | [Public domain](https://creativecommons.org/publicdomain/mark/1.0/) |
+
+---
+
+## 3Dモデル（参考）
 
 - **既定の方針：研究室が撮影した写真を第一候補として使用する。**
 - 発注者が参考として挙げた Sketchfab のコレクション
   （https://sketchfab.com/baxterbaxter/collections/frogs-701ddc5db18a40bcad2029777125f52e ）は
   **3Dモデルの集まり**であり、モデルごとに利用条件（CCライセンスの種類、クレジット表記の要否、非営利限定の有無など）が異なる。
-- **本アプリで実際に使用する場合は、モデルごとに個別にライセンスを確認し、下記の表に記載すること。**
+- **本アプリで実際に使用する場合は、モデルごとに個別にライセンスを確認し、本ファイルに記載すること。**
   ライセンスが確認できない・不明なモデルは使用しない。
-
-| 種コード | 素材の出典 | ライセンス | 作者クレジット | 確認日 | 備考 |
-|---|---|---|---|---|---|
-| amagaeru | （未確認・研究室写真を使用予定） | — | — | — | プレースホルダ画像を使用中 |
-| tonosama | （未確認・研究室写真を使用予定） | — | — | — | プレースホルダ画像を使用中 |
-| ezoaka | （未確認・研究室写真を使用予定） | — | — | — | プレースホルダ画像を使用中 |
-| hikigaeru | （未確認・研究室写真を使用予定） | — | — | — | プレースホルダ画像を使用中 |
-| tsuchigaeru | （未確認・研究室写真を使用予定） | — | — | — | プレースホルダ画像を使用中 |
-| ushigaeru | （未確認・研究室写真を使用予定） | — | — | — | プレースホルダ画像を使用中 |
-
-> Sketchfab 由来の3Dモデルを実際に採用した場合は、上の表の該当行に「モデル名 / 作者名 / ライセンス種別（例：CC BY 4.0）/ 元ページURL」を追記し、必要であれば画面上（使い方モーダルや完了画面など）にもクレジット表記を追加すること。
 
 ---
 
@@ -59,4 +63,5 @@
 
 ## 更新履歴
 
+- 2026-09-11：Wikimedia Commons の種写真6点とライセンス・作者情報を追加。
 - 2026-09-11：雛形作成（Claude Code、GAS/スクリプト担当分）。素材の個別確認は未実施。写真・3Dモデルの差し替え時に本ファイルを必ず更新すること。

@@ -138,6 +138,7 @@ function populateMonthSelect() {
   monthSel.appendChild(optEmpty);
 
   if (!yearVal || yearVal === 'before') {
+    optEmpty.textContent = yearVal === 'before' ? '—' : '先に年';
     monthSel.value = '';
     monthSel.disabled = true;
     return;
@@ -171,6 +172,7 @@ function populateDaySelect() {
   daySel.appendChild(optEmpty);
 
   if (!yearVal || yearVal === 'before' || !monthVal) {
+    optEmpty.textContent = yearVal === 'before' ? '—' : '先に月';
     daySel.value = '';
     daySel.disabled = true;
     return;

@@ -189,6 +189,12 @@ body {
   min-width: 0;
 }
 
+.field select:disabled {
+  background: #eeeeee;
+  color: #666666;
+  border-style: dashed;
+}
+
 .hint {
   font-size: 0.8rem;
   color: var(--muted);
@@ -434,6 +440,25 @@ textarea {
 
 .privacy-note a {
   color: var(--accent-dark);
+}
+
+.photo-credits {
+  margin-top: 12px;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.photo-credits summary {
+  cursor: pointer;
+}
+
+.photo-credits ul {
+  margin: 8px 0 0;
+  padding-left: 1.25rem;
+}
+
+.photo-credits a {
+  color: inherit;
 }
 
 .modal-ok-btn {
