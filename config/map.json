@@ -5,8 +5,6 @@
   "maxZoom": 17,
   "areaBounds": [[41.3, 139.3], [45.6, 146.0]],
   "roundDecimals": 4,
-  "publicDecimals": 3,
-  "showPublicPins": true,
   "enableComment": false,
   "requireConsent": false,
   "gasUrl": "https://script.google.com/macros/s/AKfycbw3j5t4p_niL5mqTuKfb971f9yWRYaBB25_dWORMcZe0kGWynEqhhG7-XvcW7MpapG2/exec",

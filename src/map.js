@@ -1,4 +1,4 @@
-// map.js — Leaflet 地図・仮ピン・公開ピンまわり
+// map.js — Leaflet 地図・仮ピンまわり
 import L from 'leaflet';
 
 const TEMP_PIN_SVG =
@@ -31,7 +31,6 @@ const BASE_LAYERS = {
 
 let mapInstance = null;
 let tempMarker = null;
-let publicPins = null;
 let baseLayers = null; // { std: L.TileLayer, photo: L.TileLayer }
 let currentBase = 'std';
 
@@ -60,7 +59,6 @@ export function createMap(container, mapConfig, onMapClick) {
   }
   currentBase = 'std';
   baseLayers[currentBase].addTo(mapInstance);
-  publicPins = L.layerGroup().addTo(mapInstance);
 
   mapInstance.on('click', (e) => {
     onMapClick({ lat: e.latlng.lat, lng: e.latlng.lng });
@@ -125,39 +123,4 @@ export function clearTempPin() {
     mapInstance.removeLayer(tempMarker);
   }
   tempMarker = null;
-}
-
-/**
- * 公開ピンを circleMarker で表示する。
- * @param {Array<{lat:number,lng:number,species_code:string,ym:string}>} pins
- * @param {Map<string,object>} speciesByCode
- */
-export function renderPublicPins(pins, speciesByCode) {
-  if (!mapInstance || !Array.isArray(pins)) return;
-  publicPins.clearLayers();
-  for (const pin of pins) {
-    if (typeof pin.lat !== 'number' || typeof pin.lng !== 'number') continue;
-    const sp = speciesByCode.get(pin.species_code);
-    const color = (sp && sp.color) || '#888888';
-    const name = (sp && sp.name) || pin.species_code || '不明';
-    const marker = L.circleMarker([pin.lat, pin.lng], {
-      radius: 6,
-      color: color,
-      weight: 1,
-      fillColor: color,
-      fillOpacity: 0.7
-    }).addTo(publicPins);
-    const ymText = pin.ym ? pin.ym : '時期不明';
-    marker.bindPopup(`<strong>${escapeHtml(name)}</strong><br>観察年月: ${escapeHtml(ymText)}`);
-  }
-}
-
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, (c) => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;'
-  }[c]));
 }

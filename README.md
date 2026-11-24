@@ -153,8 +153,6 @@ Python スクリプトを使う前に `python -m pip install -r scripts/requirem
 | `minZoom` / `maxZoom` | ピンチ・ドラッグで動かせるズーム範囲 |
 | `areaBounds` | 「対象範囲」の矩形 `[[南西の緯度,経度],[北東の緯度,経度]]`。この外の投稿は保存はされるが `review_status = out_of_area` になる。**`gas/Code.gs` の `AREA_BOUNDS` と手動で同期すること** |
 | `roundDecimals` | 保存時の緯度経度の丸め桁数（既定4＝約10m精度） |
-| `publicDecimals` | 公開ピン配信（`?action=pins`）時の丸め桁数（既定3＝約100m精度） |
-| `showPublicPins` | 起動時に既投稿ピン（位置・種・観察年月のみ）を地図に表示するか |
 | `enableComment` | 投稿フォームに「ひとこと」欄を出すか（既定 false）。保存する場合のみ GAS のスクリプトプロパティ `ENABLE_COMMENT` も `true` にする |
 | `requireConsent` | 使い方モーダルに同意ボタンを出すか |
 | `gasUrl` | GAS ウェブアプリのURL（`gas/README.md` の手順3で発行） |
@@ -171,7 +169,7 @@ Python スクリプトを使う前に `python -m pip install -r scripts/requirem
 | `code` | 種の識別コード（写真・音源のファイル名、スプレッドシートの `species_code` 列に使う。**`gas/Code.gs` の `SPECIES_CODES` と手動で同期すること**） |
 | `name` | 表示名 |
 | `note` | カード下の補足1行 |
-| `color` | 公開ピン表示時のアイコン色 |
+| `color` | 種の設定色 |
 
 ---
 

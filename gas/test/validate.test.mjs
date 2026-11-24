@@ -21,7 +21,7 @@ function loadGas() {
   return sandbox.module.exports;
 }
 
-const { validateRecord, buildObservedDateText, isInArea, roundTo, extractYm } = loadGas();
+const { validateRecord, buildObservedDateText, isInArea, roundTo } = loadGas();
 
 // 固定の「現在時刻」。テストが未来判定に依存しないよう now を明示的に渡す。
 const NOW = new Date(2026, 8, 11, 12, 0, 0); // 2026-09-11 12:00 (月は0始まり)
@@ -197,13 +197,6 @@ test("isInArea: 境界値", () => {
 test("roundTo", () => {
   assert.equal(roundTo(43.123456, 4), 43.1235);
   assert.equal(roundTo(43.1234, 3), 43.123);
-});
-
-test("extractYm", () => {
-  assert.equal(extractYm("2026-07-15"), "2026-07");
-  assert.equal(extractYm("2026"), "2026");
-  assert.equal(extractYm("before_2016"), "");
-  assert.equal(extractYm(""), "");
 });
 
 test("数字文字列の年月日も数値として受理する（フロント互換）", () => {

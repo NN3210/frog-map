@@ -36,8 +36,7 @@ function receiver() {
     }) },
     ContentService: { MimeType: { JSON: 'json' }, createTextOutput: text => ({ setMimeType: () => JSON.parse(text) }) },
     LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }) },
-    Utilities: { formatDate: date => date.toISOString() },
-    CacheService: { getScriptCache: () => ({ get: () => null, put() {}, remove() {} }) }
+    Utilities: { formatDate: date => date.toISOString() }
   });
   vm.runInContext(code, script);
   const post = data => script.doPost({ postData: { contents: JSON.stringify(data) } });
@@ -45,7 +44,7 @@ function receiver() {
   return { script, rows, get, post, service };
 }
 
-test('setup → 投稿 → 再送は同じ1行 → 公開ピンは4項目のみ', () => {
+test('setup → 投稿 → 再送は同じ1行 → 投稿済みでも公開ピンは空', () => {
   const { script, rows, post, get } = receiver();
   assert.equal(get('ping').ok, false);
   script.setup();
@@ -55,7 +54,7 @@ test('setup → 投稿 → 再送は同じ1行 → 公開ピンは4項目のみ'
   assert.deepEqual(post(payload), { ok: true, record_id: recordId });
   assert.equal(rows.length, 2);
   assert.equal(rows[1][rows[0].indexOf('comment')], '');
-  assert.deepEqual(get('pins'), [{ lat: 43.196, lng: 141.776, species_code: 'ezoaka', ym: '' }]);
+  assert.deepEqual(get('pins'), []);
 });
 
 test('入力拒否・書き込みエラー・列の入れ替えを保存成功と扱わない', () => {

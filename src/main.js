@@ -10,7 +10,6 @@ import {
   placeOrMoveTempPin,
   getTempPinLatLng,
   clearTempPin,
-  renderPublicPins,
   toggleBaseLayer
 } from './map.js';
 import { initForm, resetForm, setSheetCoords } from './form.js';
@@ -24,9 +23,6 @@ import {
   showCompleteScreen,
   hideCompleteScreen
 } from './ui.js';
-import { fetchPublicPins } from './api.js';
-
-const speciesByCode = new Map(speciesList.map((s) => [s.code, s]));
 
 let currentLatLng = null;
 
@@ -61,21 +57,6 @@ function main() {
   wireSheetClose();
   wireLayerButton();
 
-  let pinRequest = 0;
-  function refreshPins() {
-    if (!mapConfig.showPublicPins) return;
-    const request = ++pinRequest;
-    fetchPublicPins(mapConfig.gasUrl)
-      .then((pins) => {
-        if (request === pinRequest) renderPublicPins(pins, speciesByCode);
-      })
-      .catch((err) => {
-        // 取得失敗は黙って無視（コンソールにのみ記録）
-        console.warn('公開ピンの取得に失敗しました', err);
-      });
-  }
-  refreshPins();
-
   initForm(
     { species: speciesList, speciesAssets: __SPECIES_ASSETS__, mapConfig },
     {
@@ -92,7 +73,6 @@ function main() {
     resetForm();
     clearTempPin();
     currentLatLng = null;
-    refreshPins();
   });
 }
 

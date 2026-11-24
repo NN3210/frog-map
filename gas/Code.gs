@@ -44,11 +44,10 @@ var HABITATS = [
 var AREA_BOUNDS = [[41.3, 139.3], [45.6, 146.0]];
 
 var ROUND_DECIMALS = 4;   // 保存時の丸め桁（約10m精度）
-var PUBLIC_DECIMALS = 3;  // 公開ピン配信時の丸め桁（約100m精度）
 var COMMENT_MAX = 100;    // ひとことの最大文字数
 var DUPLICATE_WINDOW_MS = 120000;   // 重複判定の時間窓（2分）
 var DUPLICATE_LOOKBACK_ROWS = 50;   // 重複判定で遡る行数
-var GAS_VERSION = "1.1.0";
+var GAS_VERSION = "1.1.1";
 
 // スプレッドシートの列順（docs/DESIGN.md §3.1 のとおり）
 var COLUMNS = [
@@ -170,8 +169,6 @@ function doPost(e) {
       lock.releaseLock();
     }
 
-    try { CacheService.getScriptCache().remove("pins"); } catch (cacheErr) { /* expires in 60s */ }
-
     return jsonOutput_({ ok: true, record_id: record.record_id });
   } catch (err) {
     return jsonOutput_({ ok: false, error: "server_error" });
@@ -179,14 +176,14 @@ function doPost(e) {
 }
 
 /**
- * action=pins → 公開ピン一覧（未審査・重複疑いのみ、座標は PUBLIC_DECIMALS 丸め）
+ * action=pins → 旧版の投稿画面との互換用に空配列を返す
  * action=ping または指定なし → 疎通確認
  */
 function doGet(e) {
   try {
     var params = (e && e.parameter) || {};
     if (params.action === "pins") {
-      return jsonOutput_(getPins_());
+      return jsonOutput_([]);
     }
     readRows_(spreadsheetId_(), true);
     var acceptUntil = PropertiesService.getScriptProperties().getProperty("ACCEPT_UNTIL");
@@ -251,57 +248,6 @@ function isDuplicate_(rows, record, now) {
     }
   }
   return false;
-}
-
-/**
- * 公開ピン一覧を作る（review_status が unreviewed / suspect_duplicate のみ）。
- * CacheService に 60 秒キャッシュ（100KB を超える場合はキャッシュを省略）。
- */
-function getPins_() {
-  var cache = CacheService.getScriptCache();
-  var cached = cache.get("pins");
-  if (cached) {
-    return JSON.parse(cached);
-  }
-
-  var values = readRows_(spreadsheetId_(), false);
-  var pins = [];
-
-  if (values.length) {
-    var latIdx = COLUMNS.indexOf("lat");
-    var lngIdx = COLUMNS.indexOf("lng");
-    var speciesIdx = COLUMNS.indexOf("species_code");
-    var dateTextIdx = COLUMNS.indexOf("observed_date_text");
-    var statusIdx = COLUMNS.indexOf("review_status");
-
-    for (var i = 0; i < values.length; i++) {
-      var row = values[i];
-      var status = row[statusIdx];
-      if (status !== "unreviewed" && status !== "suspect_duplicate") continue;
-
-      var lat = row[latIdx];
-      var lng = row[lngIdx];
-      if (lat === "" || lng === "" || lat === null || lng === null) continue;
-
-      pins.push({
-        lat: roundTo(Number(lat), PUBLIC_DECIMALS),
-        lng: roundTo(Number(lng), PUBLIC_DECIMALS),
-        species_code: row[speciesIdx] || "",
-        ym: extractYm(row[dateTextIdx])
-      });
-    }
-  }
-
-  var json = JSON.stringify(pins);
-  if (json.length <= 100000) {
-    try {
-      cache.put("pins", json, 60);
-    } catch (cacheErr) {
-      // 100KB 超過などキャッシュに失敗しても無視して結果は返す
-    }
-  }
-
-  return pins;
 }
 
 // ============================================================
@@ -520,16 +466,6 @@ function roundTo(value, decimals) {
   return Math.round(value * factor) / factor;
 }
 
-/**
- * observed_date_text の先頭7文字を年月として返す。
- * "2026-07-15" → "2026-07" / "2026" → "2026" / "before_2016" → "" / "" → ""
- */
-function extractYm(text) {
-  if (!text) return "";
-  if (String(text).indexOf("before_") === 0) return "";
-  return String(text).substring(0, 7);
-}
-
 // GAS には存在しない module を使って、Node (vm) からも純粋関数を読み込めるようにする。
 // GAS 実行時は typeof module === "undefined" なのでこのブロックは無視される。
 if (typeof module !== "undefined") {
@@ -538,7 +474,6 @@ if (typeof module !== "undefined") {
     buildObservedDateText: buildObservedDateText,
     validateOption_: validateOption_,
     isInArea: isInArea,
-    roundTo: roundTo,
-    extractYm: extractYm
+    roundTo: roundTo
   };
 }

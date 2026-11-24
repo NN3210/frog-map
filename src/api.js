@@ -41,19 +41,6 @@ function mockSubmit(payload) {
   });
 }
 
-function mockPins() {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve([
-        { lat: 43.196, lng: 141.776, species_code: 'amagaeru', ym: '2026-06' },
-        { lat: 43.21, lng: 141.82, species_code: 'ezoaka', ym: '2026-04' },
-        { lat: 43.15, lng: 141.7, species_code: 'tonosama', ym: '2026' },
-        { lat: 43.18, lng: 141.9, species_code: 'unknown', ym: '' }
-      ]);
-    }, 600);
-  });
-}
-
 /**
  * 投稿を送信する。
  * @returns {Promise<{ok:true, record_id:string}|{ok:false, error:string}>}
@@ -84,18 +71,4 @@ export async function submitRecord(payload, gasUrl) {
   } catch (e) {
     return { ok: false, error: e.message === 'http_error' ? 'http_error' : 'network' };
   }
-}
-
-/**
- * 公開ピンを取得する。取得失敗時は例外を投げる（呼び出し側で握りつぶす）。
- */
-export async function fetchPublicPins(gasUrl) {
-  if (__MOCK_API__) {
-    return mockPins();
-  }
-  if (!gasUrl) {
-    throw new Error('gasUrl not configured');
-  }
-  const url = gasUrl + (gasUrl.includes('?') ? '&' : '?') + 'action=pins';
-  return fetchJson(url, { method: 'GET', cache: 'no-store' }, 30000);
 }

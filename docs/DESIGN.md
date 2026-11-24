@@ -11,21 +11,21 @@
 |---|---|---|
 | フロント | **Vanilla JS + Leaflet 1.9**、esbuild で単一バンドル | フレームワーク不要の規模。Leaflet は JS 約42KB + CSS 約4KB（gzip）で 300KB 目標に余裕。esbuild は依存ゼロ・高速。 |
 | 地図タイル | 地理院タイル 標準地図 `https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png`（既定）＋ 全国最新写真（シームレス）`https://cyberjapandata.gsi.go.jp/xyz/seamlessphoto/{z}/{x}/{y}.jpg`（右下の「航空写真」ボタンで切替） | 標準地図は水田記号あり。航空写真は田んぼ・池の実際の様子を見ながら場所を選べる。どちらも地理院タイルなので外部接続先は増えない。出典表記「地理院タイル」を常時表示（[利用規約](https://maps.gsi.go.jp/development/ichiran.html) の「出典の記載」要件に対応）。切替状態は保存しない（localStorage 不使用のため、再読込で標準地図に戻る）。 |
-| ピン | Leaflet `circleMarker`（既投稿）＋ `divIcon`（仮ピン） | 画像アイコンを使わないので追加リクエストなし。種ごとに色分けは CSS のみ。 |
-| バックエンド | Google Apps Script Web アプリ（`doPost` 受付 / `doGet` 公開ピン配信）＋スプレッドシート | 要件 6.1 のとおり。追加費用なし、CSV は標準機能。 |
+| ピン | Leaflet `divIcon`（今回選択中の地点） | 画像アイコンを使わないので追加リクエストなし。 |
+| バックエンド | Google Apps Script Web アプリ（`doPost` 受付 / `doGet` 疎通確認）＋スプレッドシート | 要件 6.1 のとおり。追加費用なし、CSV は標準機能。 |
 | ホスティング | GitHub Pages（`dist/` を `gh-pages` ブランチへ） | 無料・静的。大学ドメインが使える場合は CNAME で対応可。 |
 | QR | Python `segno`（純Python）で PNG/SVG、`reportlab` で印刷用 PDF | `?src=` 別に複数枚生成。 |
 | QR配布ページ | `docs/qr/index.html`（QR画像とPNG/SVG/PDFのダウンロードリンクだけの静的HTML）。ビルド時に `docs/qr/` を丸ごと `dist/qr/` にコピーし、公開サイトの `/qr/` で開ける | JSなし・外部通信なし。`app.js+app.css` の300KB上限には影響しない。 |
 | エクスポート | Python `scripts/export.py`：シートから DL した CSV → GeoJSON / QGIS 用 CSV | Google API 認証不要（手動 DL した CSV を入力にする）。 |
 
-**外部接続先はふたつだけ**：地理院タイル（画像）と GAS の URL（投稿・公開ピン取得）。JS/CSS は自前配信。
+**外部接続先はふたつだけ**：地理院タイル（画像）と GAS の URL（投稿の送信）。JS/CSS は自前配信。
 
 ### プライバシー要件（第5章）への対応
 - Geolocation / カメラ / Cookie / localStorage / sessionStorage：**一切使わない**（コードレビューで `navigator.geolocation`, `localStorage`, `document.cookie` の非出現を確認）。
 - 送信失敗時の入力保持は **メモリ上のみ**（ページを閉じれば消える）。
 - GAS 側で `e.parameter` の投稿本文以外（IP・UA は GAS でもそもそも取得不可）を保存しない。
 - 座標丸めは **クライアント側と GAS 側の両方**で実施（設定 `roundDecimals`）。
-- 公開ピン（doGet）は **位置・種・観察年月のみ**返す。`comment`・日・record_id は返さない。
+- 保存した投稿を閲覧できるのは管理者のスプレッドシートのみ。
 
 ---
 
@@ -48,7 +48,7 @@
 - 上部バナー：「地図をタップして、カエルを見た・聞いた場所を教えてください」
 - 左下：「使い方」ボタン（44px 以上）。右下：Leaflet 標準の出典表示（「地理院タイル」リンク）。
 - 「現在地」ボタンは設置しない。
-- 起動時に `doGet` で公開ピンを取得して `circleMarker` 表示（設定で OFF 可）。取得失敗時は黙って非表示。
+- QR から開くとピンのない地図を表示する。地図をタップすると、入力中の目撃地点に仮ピンを置く。
 
 ### ② 投稿シート（ボトムシート）
 - 地図タップで仮ピン（ドラッグ可）を立て、下からせり上がる。シートは画面高さの最大 70%、内部スクロール。地図が上部に見えたままなので仮ピンを微調整できる。
@@ -67,7 +67,7 @@
 - プライバシー説明（案、3行）：
   > このアプリは、あなたの端末の情報（位置情報・写真・連絡先など）を取得・保存しません。
   > 投稿されるのは、地図でタップした場所と、フォームで選んだ内容だけです。
-  > 投稿された場所は、研究のために保存され、精度を粗くした上で地図に表示されることがあります。
+  > 投稿された場所は、管理者の研究用の一覧に保存されます。
 - 大学のプライバシー方針へのリンク（設定 URL）。同意ボタンは設定でON/OFF（既定 OFF）。
 
 ---
@@ -101,7 +101,7 @@
 | メソッド | 用途 | 入出力 |
 |---|---|---|
 | `POST <exec URL>` | 投稿 | 本文：JSON 文字列を `Content-Type: text/plain`（プリフライト回避）。応答：`{ok:true, record_id}` または `{ok:false, error}`。 |
-| `GET <exec URL>?action=pins` | 公開ピン | 応答：`[{lat, lng, species_code, ym}]`（`ym` = `YYYY-MM` or `YYYY` or 空）。`publicDecimals`（既定 3）で丸めて返す。キャッシュ `CacheService` 60秒。 |
+| `GET <exec URL>?action=pins` | 旧版の投稿画面との互換 | 常に空配列 `[]` を返す。 |
 | `GET <exec URL>?action=ping` | 保存先の確認 | 登録されたシートの列を検査し、`{ok:true, version, accept_until}` |
 
 **サーバ側検証**
@@ -126,8 +126,6 @@
   "maxZoom": 17,
   "areaBounds": [[41.3, 139.3], [45.6, 146.0]],
   "roundDecimals": 4,
-  "publicDecimals": 3,
-  "showPublicPins": true,
   "enableComment": false,
   "requireConsent": false,
   "gasUrl": "https://script.google.com/macros/s/XXXX/exec",
@@ -181,11 +179,11 @@ app_frogMap/
 | # | 事項 | 既定値（回答待ちの間） | 推奨 |
 |---|---|---|---|
 | 1 | 初期中心・ズーム | 岩見沢市役所 (43.1961, 141.7759)、zoom 10 | 会場が市内ならこのままで石狩・空知の水田帯が入る |
-| 2 | 座標丸め | 保存 4桁（約10m）、公開表示 3桁（約100m） | 研究用途は 4桁、公開は 3桁の二段構え |
+| 2 | 座標丸め | 保存 4桁（約10m） | 研究用一覧に保存 |
 | 3 | 自由記述欄 | **設けない**（`enableComment:false`） | 個人情報混入リスクと 60 秒目標の両面で不要 |
 | 4,5 | 種の補足文・正式名称 | 要件定義書の案をそのまま | `species.json` で差替え |
 | 6 | プライバシー方針 URL・同意ボタン | URL 空（リンク非表示）、同意ボタン無し | 大学規程次第 |
 | 7 | ホスティング | GitHub Pages | 大学ドメイン可なら CNAME |
 | 8 | 受付期間 | 無期限 | GAS のスクリプトプロパティで後から設定可 |
 | 9 | 完了画面リンク | 空（ボタン非表示） | |
-| 10 | 既投稿ピンの公開表示 | **表示する**（3桁丸め） | 客寄せ効果があるため推奨 |
+| 10 | 既投稿ピンの公開表示 | 非表示 | 投稿者が今回選んだ場所だけ表示 |
