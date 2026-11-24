@@ -125,7 +125,8 @@ export function setSubmitting(isSubmitting) {
 
 /* ---------- 完了画面 ---------- */
 
-export function showCompleteScreen(mapConfig) {
+export function showCompleteScreen(mapConfig, recordId) {
+  $('save-receipt').textContent = __MOCK_API__ ? '練習モードのため、この投稿は保存されません。' : '保存しました。受付番号 ' + recordId;
   const labLink = $('lab-link');
   if (mapConfig.labPageUrl) {
     labLink.href = mapConfig.labPageUrl;

@@ -79,7 +79,7 @@
 | 列 | 型 | 付与元 | 備考 |
 |---|---|---|---|
 | submitted_at | ISO8601 JST (`2026-09-20T13:05:22+09:00`) | GAS | |
-| record_id | UUID v4 | GAS | `Utilities.getUuid()` |
+| record_id | UUID v4 | 投稿画面 | 一件ごとに生成。同じ内容の再送時は同じ番号を使う。旧クライアントの投稿には GAS が発行 |
 | lat, lng | number | クライアント→GAS で再丸め | `roundDecimals`（既定 4） |
 | species_code | string | クライアント | `config/species.json` のコードのみ許可。空可 |
 | observed_year / observed_month / observed_day | int | クライアント | 空可。GAS で未来日・範囲外を検証 |
@@ -102,14 +102,15 @@
 |---|---|---|
 | `POST <exec URL>` | 投稿 | 本文：JSON 文字列を `Content-Type: text/plain`（プリフライト回避）。応答：`{ok:true, record_id}` または `{ok:false, error}`。 |
 | `GET <exec URL>?action=pins` | 公開ピン | 応答：`[{lat, lng, species_code, ym}]`（`ym` = `YYYY-MM` or `YYYY` or 空）。`publicDecimals`（既定 3）で丸めて返す。キャッシュ `CacheService` 60秒。 |
-| `GET <exec URL>?action=ping` | 疎通確認 | `{ok:true, version}` |
+| `GET <exec URL>?action=ping` | 保存先の確認 | 登録されたシートの列を検査し、`{ok:true, version, accept_until}` |
 
 **サーバ側検証**
 - 必須：`lat`, `lng` が数値。それ以外は空でも受理。
 - `observed_year`/`observed_month`/`observed_day` はフロントから number で送るが、`"2026"` のような数字だけの文字列も GAS 側で数値として受理する（`gas/Code.gs` の `toIntOrRaw_`）。
 - 選択肢外の値 → その項目を空にして `review_status = invalid` は付けず、**丸ごと `invalid`** にする（改竄の痕跡として残す）。
 - 北海道の矩形（`config/map.json` の `areaBounds`）外 → 保存して `out_of_area`。
-- ハニーポットが埋まっている → 保存せず `{ok:true}` を返す（ボットに気づかせない）。
+- ハニーポットが埋まっている場合は `invalid` を返す。保存成功時にだけ受付番号を返す。
+- 保存には Apps Script の `SPREADSHEET_ID` と Google Sheets API を使用する。権限は `drive.file`。同じ受付番号の再送はロック内で既存行を確認して同じ番号を返す。
 - 重複抑制：直近 50 行のうち、同一 `lat,lng,species_code,observed_date_text,count_category` かつ `submitted_at` が 2 分以内 → 保存して `suspect_duplicate`。
 - 受付期間：`ACCEPT_UNTIL`（スクリプトプロパティ、空なら無期限）を過ぎたら `{ok:false, error:"closed"}`。
 - 割り当て（2026-09 時点の公式値を実装時に再確認）：Web アプリの同時実行 30、URL Fetch 制限は関係なし、スプレッドシート書込は `LockService` で直列化。祭り規模（数百件/日）は問題なし。

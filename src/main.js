@@ -54,28 +54,35 @@ function wireLayerButton() {
 
 function main() {
   createMap($('map'), mapConfig, onMapClick);
+  if (__MOCK_API__) $('top-banner').prepend('【練習・保存なし】');
 
   wireModalCloseButtons();
   initUsageModal(mapConfig);
   wireSheetClose();
   wireLayerButton();
 
-  if (mapConfig.showPublicPins) {
+  let pinRequest = 0;
+  function refreshPins() {
+    if (!mapConfig.showPublicPins) return;
+    const request = ++pinRequest;
     fetchPublicPins(mapConfig.gasUrl)
-      .then((pins) => renderPublicPins(pins, speciesByCode))
+      .then((pins) => {
+        if (request === pinRequest) renderPublicPins(pins, speciesByCode);
+      })
       .catch((err) => {
         // 取得失敗は黙って無視（コンソールにのみ記録）
         console.warn('公開ピンの取得に失敗しました', err);
       });
   }
+  refreshPins();
 
   initForm(
     { species: speciesList, speciesAssets: __SPECIES_ASSETS__, mapConfig },
     {
       getLatLng: () => currentLatLng || getTempPinLatLng(),
-      onSuccess: () => {
+      onSuccess: (recordId) => {
         closeSheet();
-        showCompleteScreen(mapConfig);
+        showCompleteScreen(mapConfig, recordId);
       }
     }
   );
@@ -85,6 +92,7 @@ function main() {
     resetForm();
     clearTempPin();
     currentLatLng = null;
+    refreshPins();
   });
 }
 

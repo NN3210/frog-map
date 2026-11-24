@@ -128,7 +128,7 @@
     </ul>
     <div class="privacy-note">
       <p>このアプリは、あなたの端末の情報（位置情報・写真・連絡先など）を取得・保存しません。</p>
-      <p>投稿されるのは、地図でタップした場所と、フォームで選んだ内容だけです。</p>
+      <p>研究用の一覧には、タップした観察場所、選んだ内容、受付日時・番号、配布元コード、アプリの版を記録します。</p>
       <p>投稿された場所は、研究のために保存され、精度を粗くした上で地図に表示されることがあります。</p>
       <p id="privacy-link-wrap" hidden><a id="privacy-link" href="#" target="_blank" rel="noopener">大学のプライバシー方針を見る</a></p>
     </div>
@@ -161,13 +161,13 @@
 <!-- 完了画面 -->
 <div id="complete-screen" class="complete-screen" hidden>
   <h2>ありがとうございました！</h2>
-  <p>投稿が届きました。</p>
+  <p id="save-receipt"></p>
   <div class="complete-actions">
     <button id="again-btn" class="btn-primary" type="button">もう1件投稿する</button>
     <a id="lab-link" class="btn-secondary" href="#" target="_blank" rel="noopener" hidden>研究室のページを見る</a>
   </div>
 </div>
 
-<script src="./app.js"></script>
+<script src="./app.js?v=__APP_VERSION__"></script>
 </body>
 </html>

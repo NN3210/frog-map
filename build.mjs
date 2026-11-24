@@ -17,6 +17,13 @@ const sizeOnly = args.includes('--size');
 const pkg = JSON.parse(fssync.readFileSync(path.join(root, 'package.json'), 'utf8'));
 const APP_VERSION = pkg.version;
 
+if (!isDev) {
+  const config = JSON.parse(fssync.readFileSync(path.join(root, 'config', 'map.json'), 'utf8'));
+  if (!/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(config.gasUrl)) {
+    throw new Error('本番公開には config/map.json の gasUrl に Apps Script の /exec URL が必要です。');
+  }
+}
+
 const SPECIES_IMAGE_EXT = ['jpg', 'jpeg', 'png', 'webp'];
 const SPECIES_SOUND_EXT = ['mp3', 'm4a', 'ogg'];
 

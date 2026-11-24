@@ -20,17 +20,23 @@ export function resolveSource(defaultSource) {
   return defaultSource;
 }
 
-function timeoutFetch(url, options, timeoutMs) {
+async function fetchJson(url, options, timeoutMs) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
-  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timer));
+  try {
+    const res = await fetch(url, { ...options, credentials: 'omit', signal: controller.signal });
+    if (!res.ok) throw new Error('http_error');
+    return await res.json();
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 /** mock: 600ms 後に成功を返す */
 function mockSubmit(payload) {
   return new Promise((resolve) => {
     setTimeout(() => {
-      resolve({ ok: true, record_id: 'mock-' + Math.random().toString(36).slice(2, 10) });
+      resolve({ ok: true, record_id: payload.request_id });
     }, 600);
   });
 }
@@ -60,26 +66,23 @@ export async function submitRecord(payload, gasUrl) {
     return { ok: false, error: 'not_configured' };
   }
   try {
-    const res = await timeoutFetch(
+    const data = await fetchJson(
       gasUrl,
       {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify(payload),
-        redirect: 'follow'
+        redirect: 'follow',
+        referrerPolicy: 'no-referrer'
       },
-      15000
+      45000
     );
-    if (!res.ok) {
-      return { ok: false, error: 'http_error' };
-    }
-    const data = await res.json();
-    if (data && data.ok) {
+    if (data && data.ok === true && data.record_id && data.record_id === payload.request_id) {
       return { ok: true, record_id: data.record_id };
     }
     return { ok: false, error: (data && data.error) || 'unknown' };
   } catch (e) {
-    return { ok: false, error: 'network' };
+    return { ok: false, error: e.message === 'http_error' ? 'http_error' : 'network' };
   }
 }
 
@@ -94,7 +97,5 @@ export async function fetchPublicPins(gasUrl) {
     throw new Error('gasUrl not configured');
   }
   const url = gasUrl + (gasUrl.includes('?') ? '&' : '?') + 'action=pins';
-  const res = await timeoutFetch(url, { method: 'GET' }, 15000);
-  if (!res.ok) throw new Error('http_error');
-  return res.json();
+  return fetchJson(url, { method: 'GET', cache: 'no-store' }, 30000);
 }

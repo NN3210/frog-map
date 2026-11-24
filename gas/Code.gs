@@ -1,8 +1,7 @@
 /**
- * カエル見つけたマップ — Google Apps Script（コンテナバインド版）
+ * カエル見つけたマップ — Google Apps Script
  *
- * 使い方：スプレッドシート「拡張機能 → Apps Script」でこのファイルの内容を
- * 貼り付け、setup() を一度手動実行してからウェブアプリとしてデプロイする。
+ * appsscript.json と併せて登録し、setup() を実行してからウェブアプリとして公開する。
  * 手順は gas/README.md を参照。
  *
  * 設計の正：docs/DESIGN.md（特に §3.1, §3.2, §3.3）
@@ -14,6 +13,8 @@
 // ============================================================
 
 var SHEET_NAME = "records";
+var SHEET_RANGE = SHEET_NAME + "!A:Q";
+var REQUEST_ID_RE = /^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i;
 
 // config/species.json の "code" 一覧と手動で同期すること
 var SPECIES_CODES = [
@@ -47,7 +48,7 @@ var PUBLIC_DECIMALS = 3;  // 公開ピン配信時の丸め桁（約100m精度�
 var COMMENT_MAX = 100;    // ひとことの最大文字数
 var DUPLICATE_WINDOW_MS = 120000;   // 重複判定の時間窓（2分）
 var DUPLICATE_LOOKBACK_ROWS = 50;   // 重複判定で遡る行数
-var GAS_VERSION = "1.0.0";
+var GAS_VERSION = "1.1.0";
 
 // スプレッドシートの列順（docs/DESIGN.md §3.1 のとおり）
 var COLUMNS = [
@@ -75,19 +76,32 @@ var COLUMNS = [
 // ============================================================
 
 /**
- * 「records」シートが無ければ作成し、1行目に列名を書いて固定・太字にする。
- * Apps Script エディタで setup を選んで「実行」する。
+ * 管理者のドライブに専用の非公開シートを作成。再実行時は同じシートを確認する。
  */
 function setup() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName(SHEET_NAME);
-  if (!sheet) {
-    sheet = ss.insertSheet(SHEET_NAME);
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var props = PropertiesService.getScriptProperties();
+    var id = props.getProperty("SPREADSHEET_ID");
+    if (!id) {
+      var book = Sheets.Spreadsheets.create({
+        properties: { title: "カエル見つけたマップ 投稿データ", locale: "ja_JP", timeZone: "Asia/Tokyo" },
+        sheets: [{
+          properties: { title: SHEET_NAME, gridProperties: { frozenRowCount: 1 } },
+          data: [{ rowData: [{ values: COLUMNS.map(function (col) {
+            return { userEnteredValue: { stringValue: col }, userEnteredFormat: { textFormat: { bold: true } } };
+          }) }] }]
+        }]
+      });
+      id = book.spreadsheetId;
+      props.setProperty("SPREADSHEET_ID", id);
+    }
+    readRows_(id, true);
+    console.log("投稿一覧 https://docs.google.com/spreadsheets/d/" + id + "/edit");
+  } finally {
+    lock.releaseLock();
   }
-  var headerRange = sheet.getRange(1, 1, 1, COLUMNS.length);
-  headerRange.setValues([COLUMNS]);
-  headerRange.setFontWeight("bold");
-  sheet.setFrozenRows(1);
 }
 
 // ============================================================
@@ -110,48 +124,53 @@ function doPost(e) {
       return jsonOutput_({ ok: false, error: "bad_json" });
     }
 
-    // ハニーポット：埋まっていても保存せず、ボットには成功したように見せる
-    if (input && input.website) {
-      return jsonOutput_({ ok: true, record_id: Utilities.getUuid() });
+    if (!input || typeof input !== "object" || Array.isArray(input) || input.website ||
+        (input.request_id !== undefined && (typeof input.request_id !== "string" || !REQUEST_ID_RE.test(input.request_id)))) {
+      return jsonOutput_({ ok: false, error: "invalid" });
     }
 
     // 受付期間チェック（JST で当日終わりまで受付）
-    var acceptUntil = PropertiesService.getScriptProperties().getProperty("ACCEPT_UNTIL");
-    if (acceptUntil) {
-      var deadline = new Date(acceptUntil + "T23:59:59+09:00");
-      if (now.getTime() > deadline.getTime()) {
-        return jsonOutput_({ ok: false, error: "closed" });
-      }
-    }
+    var props = PropertiesService.getScriptProperties();
+    var acceptUntil = props.getProperty("ACCEPT_UNTIL");
+    if (props.getProperty("ENABLE_COMMENT") !== "true") input.comment = "";
 
     var validated = validateRecord(input, now);
     var record = validated.record;
     var reviewStatus = validated.review_status;
 
-    var sheet = getSheet_();
+    var id = spreadsheetId_();
     var lock = LockService.getScriptLock();
     lock.waitLock(10000);
     try {
-      if (reviewStatus === "unreviewed") {
-        if (isDuplicate_(sheet, record, now)) {
-          reviewStatus = "suspect_duplicate";
-        }
+      var rows = readRows_(id, false);
+      if (input.request_id && rows.some(function (row) { return row[1] === input.request_id; })) {
+        return jsonOutput_({ ok: true, record_id: input.request_id });
+      }
+      if (acceptUntil && now > new Date(acceptUntil + "T23:59:59.999+09:00")) {
+        return jsonOutput_({ ok: false, error: "closed" });
+      }
+      if (reviewStatus === "unreviewed" && isDuplicate_(rows, record, now)) {
+        reviewStatus = "suspect_duplicate";
       }
 
       record.submitted_at = Utilities.formatDate(now, "Asia/Tokyo", "yyyy-MM-dd'T'HH:mm:ssXXX");
-      record.record_id = Utilities.getUuid();
+      record.record_id = input.request_id || Utilities.getUuid();
       record.review_status = reviewStatus;
 
       var rowValues = COLUMNS.map(function (col) {
         var v = record[col];
         return v === undefined || v === null ? "" : v;
       });
-      sheet.appendRow(rowValues);
+      var result = Sheets.Spreadsheets.Values.append({ values: [rowValues] }, id, SHEET_RANGE,
+        { valueInputOption: "RAW", insertDataOption: "INSERT_ROWS" });
+      if (!result.updates || result.updates.updatedRows !== 1) {
+        return jsonOutput_({ ok: false, error: "server_error" });
+      }
     } finally {
       lock.releaseLock();
     }
 
-    CacheService.getScriptCache().remove("pins");
+    try { CacheService.getScriptCache().remove("pins"); } catch (cacheErr) { /* expires in 60s */ }
 
     return jsonOutput_({ ok: true, record_id: record.record_id });
   } catch (err) {
@@ -169,6 +188,7 @@ function doGet(e) {
     if (params.action === "pins") {
       return jsonOutput_(getPins_());
     }
+    readRows_(spreadsheetId_(), true);
     var acceptUntil = PropertiesService.getScriptProperties().getProperty("ACCEPT_UNTIL");
     return jsonOutput_({ ok: true, version: GAS_VERSION, accept_until: acceptUntil || null });
   } catch (err) {
@@ -180,13 +200,19 @@ function doGet(e) {
 // GAS 依存のヘルパー（Node からは呼ばれない）
 // ============================================================
 
-function getSheet_() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName(SHEET_NAME);
-  if (!sheet) {
-    throw new Error('"' + SHEET_NAME + '" シートがありません。setup() を先に実行してください。');
+function spreadsheetId_() {
+  var id = PropertiesService.getScriptProperties().getProperty("SPREADSHEET_ID");
+  if (!id) throw new Error("setup() が必要です");
+  return id;
+}
+
+function readRows_(id, headerOnly) {
+  var range = headerOnly ? SHEET_NAME + "!A1:Q1" : SHEET_RANGE;
+  var rows = Sheets.Spreadsheets.Values.get(id, range, { valueRenderOption: "UNFORMATTED_VALUE" }).values || [];
+  if (!rows.length || !COLUMNS.every(function (col, i) { return rows[0][i] === col; })) {
+    throw new Error("records の列名を確認してください");
   }
-  return sheet;
+  return rows.slice(1);
 }
 
 function jsonOutput_(obj) {
@@ -198,13 +224,8 @@ function jsonOutput_(obj) {
  * observed_date_text/count_category が完全一致し、submitted_at が
  * DUPLICATE_WINDOW_MS 以内の行があれば true。
  */
-function isDuplicate_(sheet, record, now) {
-  var lastRow = sheet.getLastRow();
-  if (lastRow <= 1) return false;
-
-  var startRow = Math.max(2, lastRow - DUPLICATE_LOOKBACK_ROWS + 1);
-  var numRows = lastRow - startRow + 1;
-  var values = sheet.getRange(startRow, 1, numRows, COLUMNS.length).getValues();
+function isDuplicate_(rows, record, now) {
+  var values = rows.slice(-DUPLICATE_LOOKBACK_ROWS);
 
   var submittedAtIdx = COLUMNS.indexOf("submitted_at");
   var latIdx = COLUMNS.indexOf("lat");
@@ -243,12 +264,10 @@ function getPins_() {
     return JSON.parse(cached);
   }
 
-  var sheet = getSheet_();
-  var lastRow = sheet.getLastRow();
+  var values = readRows_(spreadsheetId_(), false);
   var pins = [];
 
-  if (lastRow > 1) {
-    var values = sheet.getRange(2, 1, lastRow - 1, COLUMNS.length).getValues();
+  if (values.length) {
     var latIdx = COLUMNS.indexOf("lat");
     var lngIdx = COLUMNS.indexOf("lng");
     var speciesIdx = COLUMNS.indexOf("species_code");
@@ -342,8 +361,8 @@ function validateRecord(input, now) {
     : "unknown";
 
   // --- app_version ---
-  var appVersion = String(input.app_version === undefined || input.app_version === null ? "" : input.app_version)
-    .slice(0, 32);
+  var appVersion = typeof input.app_version === "string" && /^\d{1,5}\.\d{1,5}\.\d{1,5}$/.test(input.app_version)
+    ? input.app_version : "";
 
   // --- review_status（優先順位：invalid > out_of_area > unreviewed） ---
   var reviewStatus;

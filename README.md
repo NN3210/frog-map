@@ -51,7 +51,7 @@ app_frogMap/
 
 ## セットアップ手順
 
-研究室で最初に環境を用意し、本番公開するまでの手順です。上から順番に進めてください。
+本番の一覧は、管理者の Google ドライブにある「カエル見つけたマップ 投稿データ」の `records` タブです。「ファイル → ダウンロード」で CSV または Excel（.xlsx）を選べます。以下は新しい環境を構築するときの手順です。
 
 ### 1. 依存関係のインストール
 
@@ -155,7 +155,7 @@ Python スクリプトを使う前に `python -m pip install -r scripts/requirem
 | `roundDecimals` | 保存時の緯度経度の丸め桁数（既定4＝約10m精度） |
 | `publicDecimals` | 公開ピン配信（`?action=pins`）時の丸め桁数（既定3＝約100m精度） |
 | `showPublicPins` | 起動時に既投稿ピン（位置・種・観察年月のみ）を地図に表示するか |
-| `enableComment` | 投稿フォームに「ひとこと」自由記述欄を出すか（既定 false） |
+| `enableComment` | 投稿フォームに「ひとこと」欄を出すか（既定 false）。保存する場合のみ GAS のスクリプトプロパティ `ENABLE_COMMENT` も `true` にする |
 | `requireConsent` | 使い方モーダルに同意ボタンを出すか |
 | `gasUrl` | GAS ウェブアプリのURL（`gas/README.md` の手順3で発行） |
 | `privacyPolicyUrl` | 大学のプライバシー方針ページのURL（空ならリンク非表示） |

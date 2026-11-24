@@ -5,10 +5,11 @@ import { roundTo, resolveSource, submitRecord } from './api.js';
 const ERROR_MESSAGES = {
   closed: '投稿の受付は終了しました',
   not_configured: '送信先が未設定です（管理者向け）',
-  network: '電波の良いところでもう一度お試しください',
+  network: '保存を確認できませんでした。この画面を閉じずに、電波の良いところでもう一度送ってください。',
+  server_error: '保存先を確認できませんでした。時間をおいて再送してください。続く場合は係員にお知らせください。',
   http_error: '電波の良いところでもう一度お試しください',
   unknown: '電波の良いところでもう一度お試しください',
-  invalid: '電波の良いところでもう一度お試しください'
+  invalid: '入力内容を確認して、もう一度送ってください。'
 };
 
 let selectedSpeciesCode = '';
@@ -243,7 +244,7 @@ function buildPayload(latlng, mapConfig) {
     comment: mapConfig.enableComment ? $('comment').value.slice(0, 100) : '',
     source: resolveSource(mapConfig.defaultSource),
     app_version: __APP_VERSION__,
-    website: $('website').value
+    website: Boolean($('website').value)
   };
 }
 
@@ -257,8 +258,12 @@ export function initForm(config, callbacks) {
   initCommentField(config.mapConfig);
 
   const form = $('frog-form');
+  let lastPayload = '';
+  let requestId;
+  let submitting = false;
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (submitting) return;
     hideError();
 
     const latlng = callbacks.getLatLng();
@@ -268,16 +273,36 @@ export function initForm(config, callbacks) {
     }
 
     const payload = buildPayload(latlng, config.mapConfig);
+    const serialized = JSON.stringify(payload);
+    if (lastPayload !== serialized) {
+      requestId = newRequestId();
+      lastPayload = serialized;
+    }
+    submitting = true;
     setSubmitting(true);
-    const result = await submitRecord(payload, config.mapConfig.gasUrl);
-    setSubmitting(false);
-
-    if (result.ok) {
-      callbacks.onSuccess();
-    } else {
-      showError(ERROR_MESSAGES[result.error] || ERROR_MESSAGES.unknown);
+    try {
+      const result = await submitRecord({ ...payload, request_id: requestId }, config.mapConfig.gasUrl);
+      if (result.ok) {
+        lastPayload = '';
+        callbacks.onSuccess(result.record_id);
+      } else {
+        showError(ERROR_MESSAGES[result.error] || ERROR_MESSAGES.unknown);
+      }
+    } finally {
+      submitting = false;
+      setSubmitting(false);
     }
   });
+}
+
+// 一件ごとの受付番号。端末には保存せず、同じ入力の再送時だけ再使用する。
+function newRequestId() {
+  if (crypto.randomUUID) return crypto.randomUUID();
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  bytes[6] = (bytes[6] & 15) | 64;
+  bytes[8] = (bytes[8] & 63) | 128;
+  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+  return [hex.slice(0, 8), hex.slice(8, 12), hex.slice(12, 16), hex.slice(16, 20), hex.slice(20)].join('-');
 }
 
 export function setSheetCoords(latlng, decimals) {

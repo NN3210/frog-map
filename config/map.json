@@ -9,7 +9,7 @@
   "showPublicPins": true,
   "enableComment": false,
   "requireConsent": false,
-  "gasUrl": "",
+  "gasUrl": "https://script.google.com/macros/s/AKfycbw3j5t4p_niL5mqTuKfb971f9yWRYaBB25_dWORMcZe0kGWynEqhhG7-XvcW7MpapG2/exec",
   "privacyPolicyUrl": "",
   "labPageUrl": "",
   "defaultSource": "festival_2026"

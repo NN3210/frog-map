@@ -23,10 +23,9 @@
 - 外部接続は地理院タイルと GAS のみ。IP・UA を保存しない。座標は保存4桁・公開3桁に丸める
 - フロントと GAS の型契約は `docs/DESIGN.md` §3.1（年月日は数値、GAS 側は数字文字列も許容）
 
-## 未完了
-- GAS 未デプロイ → `gas/README.md` の手順で発行した URL を `config/map.json` の `gasUrl` に設定して push
-- `privacyPolicyUrl` / `labPageUrl` も未設定
-- 本番 URL での送信テスト（CORS/リダイレクト確認）
+## 保存先
+- GAS の公開 URL は `config/map.json`。専用シートの ID は GAS の `SPREADSHEET_ID` にある。運用手順は `gas/README.md`。
+- `privacyPolicyUrl` / `labPageUrl` は任意。
 
 ## モデル使い分け（ユーザー指定）
 設計・技術判断=Opus / まとまった実装=Sonnet / GAS の CORS・実機不具合で詰まったら Opus / 文言・色・種リスト変更=Haiku か Sonnet

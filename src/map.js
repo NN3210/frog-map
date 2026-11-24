@@ -31,6 +31,7 @@ const BASE_LAYERS = {
 
 let mapInstance = null;
 let tempMarker = null;
+let publicPins = null;
 let baseLayers = null; // { std: L.TileLayer, photo: L.TileLayer }
 let currentBase = 'std';
 
@@ -59,6 +60,7 @@ export function createMap(container, mapConfig, onMapClick) {
   }
   currentBase = 'std';
   baseLayers[currentBase].addTo(mapInstance);
+  publicPins = L.layerGroup().addTo(mapInstance);
 
   mapInstance.on('click', (e) => {
     onMapClick({ lat: e.latlng.lat, lng: e.latlng.lng });
@@ -132,6 +134,7 @@ export function clearTempPin() {
  */
 export function renderPublicPins(pins, speciesByCode) {
   if (!mapInstance || !Array.isArray(pins)) return;
+  publicPins.clearLayers();
   for (const pin of pins) {
     if (typeof pin.lat !== 'number' || typeof pin.lng !== 'number') continue;
     const sp = speciesByCode.get(pin.species_code);
@@ -143,7 +146,7 @@ export function renderPublicPins(pins, speciesByCode) {
       weight: 1,
       fillColor: color,
       fillOpacity: 0.7
-    }).addTo(mapInstance);
+    }).addTo(publicPins);
     const ymText = pin.ym ? pin.ym : '時期不明';
     marker.bindPopup(`<strong>${escapeHtml(name)}</strong><br>観察年月: ${escapeHtml(ymText)}`);
   }
